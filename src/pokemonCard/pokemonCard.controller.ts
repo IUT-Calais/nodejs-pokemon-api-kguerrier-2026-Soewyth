@@ -253,3 +253,32 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Une erreur est survenue lors de la mise à jour de la carte Pokémon.' });
     }
 }
+// Delete a pokemon card by ID
+export const deletePokemonCard = async (req: Request, res: Response) => {
+    const { pokemonCardId } = req.params;
+    const id = Number(pokemonCardId);
+
+    // verify id number
+    if (isNaN(id) || id <= 0) {
+        res.status(400).json({ error: "L'id doit être un nombre valide." });
+        return;
+    }
+    try {
+        // fetch existing card
+        const existingCard = await prisma.pokemonCard.findUnique({
+            where: { id: id }
+        });
+        // Verify if the card exists
+        if (!existingCard) {
+            res.status(404).json({ error: `La carte Pokémon avec l'id '${pokemonCardId}' n'existe pas.` });
+            return;
+        }
+        // Delete the pokemon card
+        await prisma.pokemonCard.delete({
+            where: { id: id }
+        })
+    } catch (error) {
+        res.status(500).json({ error: 'Une erreur est survenue lors de la suppression de la carte Pokémon.' });
+        return;
+    }
+}

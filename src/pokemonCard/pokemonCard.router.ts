@@ -6,7 +6,7 @@ import { getPokemonCards,
     getPokemonCardById, 
     createPokemonCard, 
     updatePokemonCard, 
-    // deletePokemonCard 
+    deletePokemonCard 
 } from './pokemonCard.controller';
 
 // Create router
@@ -18,4 +18,4 @@ pokemonCardRouter.get('/', getPokemonCards);
 pokemonCardRouter.get('/:pokemonCardId', getPokemonCardById);
 pokemonCardRouter.post('/', createPokemonCard);
 pokemonCardRouter.patch('/:pokemonCardId', updatePokemonCard);
-// pokemonCardRouter.delete('/:pokemonCardId', deletePokemonCard);
+pokemonCardRouter.delete('/:pokemonCardId', deletePokemonCard);
