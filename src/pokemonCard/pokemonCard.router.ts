@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { getPokemonCards, 
     getPokemonCardById, 
     createPokemonCard, 
-    // updatePokemonCard, 
+    updatePokemonCard, 
     // deletePokemonCard 
 } from './pokemonCard.controller';
 
@@ -17,5 +17,5 @@ export const pokemonCardRouter = Router();
 pokemonCardRouter.get('/', getPokemonCards);
 pokemonCardRouter.get('/:pokemonCardId', getPokemonCardById);
 pokemonCardRouter.post('/', createPokemonCard);
-// pokemonCardRouter.put('/:pokemonCardId', updatePokemonCard);
+pokemonCardRouter.patch('/:pokemonCardId', updatePokemonCard);
 // pokemonCardRouter.delete('/:pokemonCardId', deletePokemonCard);
