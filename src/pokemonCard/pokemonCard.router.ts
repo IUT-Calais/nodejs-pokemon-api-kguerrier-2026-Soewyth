@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { verifyJWT } from '../common/jwt.middleware';
 
 
 // Import controller functions
@@ -14,8 +15,8 @@ export const pokemonCardRouter = Router();
 
 
 // Define routes 
-pokemonCardRouter.get('/', getPokemonCards);
-pokemonCardRouter.get('/:pokemonCardId', getPokemonCardById);
-pokemonCardRouter.post('/', createPokemonCard);
-pokemonCardRouter.patch('/:pokemonCardId', updatePokemonCard);
-pokemonCardRouter.delete('/:pokemonCardId', deletePokemonCard);
+pokemonCardRouter.get('/', verifyJWT, getPokemonCards);
+pokemonCardRouter.get('/:pokemonCardId', verifyJWT, getPokemonCardById);
+pokemonCardRouter.post('/', verifyJWT, createPokemonCard);
+pokemonCardRouter.patch('/:pokemonCardId', verifyJWT, updatePokemonCard);
+pokemonCardRouter.delete('/:pokemonCardId', verifyJWT, deletePokemonCard);

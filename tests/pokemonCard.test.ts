@@ -1,11 +1,13 @@
 import request from 'supertest';
 import { app } from '../src';
 import { prismaMock } from './jest.setup';
+import { describe, it } from 'node:test';
+import { response } from 'express';
 
 describe('PokemonCard API', () => {
   describe('GET /pokemon-cards', () => {
     it('should fetch all PokemonCards', async () => {
-      const mockPokemonCards = [];
+      const mockPokemonCards: never[] = [];
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockPokemonCards);
@@ -50,3 +52,7 @@ describe('PokemonCard API', () => {
     });
   });
 });
+function expect(status: any) {
+  throw new Error('Function not implemented.');
+}
+

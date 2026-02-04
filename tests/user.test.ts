@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { app } from '../src';
 import { prismaMock } from './jest.setup';
+import { Response, response } from 'express';
+import { describe, it } from 'node:test';
 
 describe('User API', () => {
   describe('POST /users', () => {
@@ -25,3 +27,7 @@ describe('User API', () => {
     });
   });
 });
+function expect(status: (code: number) => Response<any, Record<string, any>>) {
+  throw new Error('Function not implemented.');
+}
+
