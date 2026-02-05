@@ -111,3 +111,56 @@ export async function loginUser(req: Request, res: Response) {
         return;
     }
 }
+
+// Get all users
+export async function getUsers(req: Request, res: Response) {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                email: true
+            }
+        });
+
+        res.status(200).json({
+            message: 'Liste des utilisateurs récupérée avec succès.',
+            result: users
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des utilisateurs.' });
+    }
+}
+
+// Get user by ID
+export async function getUserById(req: Request, res: Response) {
+    const { id } = req.params;
+    const userId = Number(id);
+
+    if (isNaN(userId)) {
+        res.status(400).json({ error: "L'ID doit être un nombre valide." });
+        return;
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true
+            }
+        });
+
+        if (!user) {
+            res.status(404).json({ error: `Utilisateur avec l'ID ${userId} non trouvé.` });
+            return;
+        }
+
+        res.status(200).json({
+            message: 'Utilisateur récupéré avec succès.',
+            result: user
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Une erreur est survenue lors de la récupération de l\'utilisateur.' });
+    }
+}
+
