@@ -7,8 +7,8 @@ import { createUser,
     loginUser,
     getUsers,
     getUserById,
-    // updateUser,
-    // deleteUser
+    updateUser,
+    deleteUser
 } from './user.controller';
 
 // Create router
@@ -23,5 +23,5 @@ userRouter.post('/login', loginUser);
 // getUsers, getUserById, updateUser, deleteUser routes
 userRouter.get('/', verifyJWT, getUsers);
 userRouter.get('/:id', verifyJWT, getUserById);
-// userRouter.patch('/:id', verifyJWT, updateUser);
-// userRouter.delete('/:id', verifyJWT, deleteUser);
+userRouter.patch('/:id', verifyJWT, updateUser);
+userRouter.delete('/:id', verifyJWT, deleteUser);
