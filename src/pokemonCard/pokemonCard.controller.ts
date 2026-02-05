@@ -277,6 +277,7 @@ export const deletePokemonCard = async (req: Request, res: Response) => {
         await prisma.pokemonCard.delete({
             where: { id: id }
         })
+        res.status(200).json({ message: 'Carte Pokémon supprimée avec succès.' });
     } catch (error) {
         res.status(500).json({ error: 'Une erreur est survenue lors de la suppression de la carte Pokémon.' });
         return;

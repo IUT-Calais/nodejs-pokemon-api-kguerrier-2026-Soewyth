@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.use('/pokemon-cards', pokemonCardRouter);
+app.use('/pokemons-cards', pokemonCardRouter);
 app.use('/users', userRouter);
 
 export const server = app.listen(port);

@@ -29,7 +29,7 @@ export const verifyJWT = (req: Request, res: Response, next: NextFunction,
         // 4. Passer au prochain middleware ou à la route
         next()
     } catch (error) {
-        res.status(403).json({ error: 'Token invalide ou expiré' })
+        res.status(401).json({ error: 'Token invalide ou expiré' })
         return
     }
 }

@@ -15,8 +15,8 @@ export const pokemonCardRouter = Router();
 
 
 // Define routes 
-pokemonCardRouter.get('/', verifyJWT, getPokemonCards);
-pokemonCardRouter.get('/:pokemonCardId', verifyJWT, getPokemonCardById);
+pokemonCardRouter.get('/', getPokemonCards);
+pokemonCardRouter.get('/:pokemonCardId', getPokemonCardById);
 pokemonCardRouter.post('/', verifyJWT, createPokemonCard);
 pokemonCardRouter.patch('/:pokemonCardId', verifyJWT, updatePokemonCard);
 pokemonCardRouter.delete('/:pokemonCardId', verifyJWT, deletePokemonCard);

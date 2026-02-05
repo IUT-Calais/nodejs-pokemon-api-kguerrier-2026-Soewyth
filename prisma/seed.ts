@@ -15,7 +15,7 @@ async function main() {
   await prisma.user.create({
     data: {
       email: "admin@gmail.com",
-      password: await bcrypt.hash("adminpass", 10),
+      password: await bcrypt.hash("admin", 10),
     },
   });
   // Create types
