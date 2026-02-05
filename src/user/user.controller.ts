@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import prisma from '../client';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import 'dotenv/config';
 
 
 // Create a new user
@@ -50,5 +52,62 @@ export async function createUser(req: Request, res: Response) {
         });
     } catch (error) {
         res.status(500).json({ error: 'Une erreur est survenue lors de la création de l\'utilisateur.' });
+    }
+}
+
+// Login user
+export async function loginUser(req: Request, res: Response) {
+    const { email, password } = req.body;
+
+    // VErification of required fields
+    if (!email) {
+        res.status(400).json({ error: "Le champ 'email' est requis." });
+        return;
+    }
+
+    if (!password) {
+        res.status(400).json({ error: "Le champ 'password' est requis." });
+        return;
+    }
+
+    try {
+        // Verify if the user exists
+        const user = await prisma.user.findUnique({
+            where: { email: email }
+        });
+
+        if (!user) {
+            res.status(401).json({ error: "Email ou mot de passe incorrect." });
+            return;
+        }
+
+        // Compare the provided password with the stored hashed password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            res.status(401).json({ error: "Email ou mot de passe incorrect." });
+            return;
+        }
+
+        // Generate a JWT token
+        const token = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET as string,
+            { expiresIn: '1' } // i can't use the env variable here ? idk why ?? 
+        );
+
+        // Retourner le token
+        res.status(200).json({
+            message: 'Connexion réussie.',
+            token,
+            user: {
+                id: user.id,
+                email: user.email
+            }
+        }); 
+        return;
+    } catch (error) {
+        res.status(500).json({ error: 'Une erreur est survenue lors de la connexion.' });
+        return;
     }
 }
