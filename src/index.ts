@@ -2,6 +2,7 @@ import express from 'express';
 import { pokemonCardRouter } from './pokemonCard/pokemonCard.router';
 import { pokemonAttackRouter } from './pokemonAttack/pokemonAttack.router';
 import { userRouter } from './user/user.router';
+import { deckRouter } from './deck/deck.router';
 export const app = express();
 const port = process.env.PORT || 3000;
 
@@ -11,6 +12,7 @@ app.use(express.json());
 app.use('/pokemons-cards', pokemonCardRouter);
 app.use('/pokemons-attacks', pokemonAttackRouter);
 app.use('/users', userRouter);
+app.use('/decks', deckRouter);
 
 export const server = app.listen(port);
 

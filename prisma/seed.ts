@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { connect } from 'http2';
 
 const prisma = new PrismaClient();
 
@@ -7,18 +8,20 @@ async function main() {
   // Clear existing data
   await prisma.pokemonCard.deleteMany();
   await prisma.pokemonAttack.deleteMany();
+  await prisma.deck.deleteMany();
   await prisma.type.deleteMany();
   await prisma.user.deleteMany();
 
   const typeNames = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 
   // create a user
-  await prisma.user.create({
+  const admin = await prisma.user.create({
     data: {
       email: "admin@gmail.com",
       password: await bcrypt.hash("admin", 10),
     },
   });
+
   // Create types
   await prisma.type.createMany({
     data: typeNames.map((name) => ({ name })),
@@ -43,7 +46,7 @@ async function main() {
 
   await prisma.pokemonAttack.create({
     data: {
-      name: "jet d'eau",
+      name: "Jet d'eau",
       damages: 35,
       type: { connect: { name: "Water" } },
     },
@@ -131,6 +134,46 @@ async function main() {
       attack: { connect: { name: "Griffe" } },
       imageUrl: "https://assets.pokemon.com/assets/cms2/img/pokedex/full/052.png",
     },
+  });
+
+  // Create decks
+  await prisma.deck.create({
+    data: {
+      name: "Deck Starter",
+      owner: { connect: { id: admin.id } },
+      cards: {
+        connect: [
+          { name: "Bulbizarre" },
+          { name: "Salamèche" },
+          { name: "Carapuce" }
+        ]
+      }
+    }
+  });
+
+  await prisma.deck.create({
+    data: {
+      name: "Deck Électrique",
+      owner: { connect: { id: admin.id } },
+      cards: {
+        connect: [
+          { name: "Pikachu" },
+        ]
+      }
+    }
+  });
+
+  await prisma.deck.create({
+    data: {
+      name: "Deck Feu",
+      owner: { connect: { id: admin.id} },
+      cards: {
+        connect: [
+          { name: "Salamèche" },
+          { name: "Pikachu" }
+        ]
+      }
+    }
   });
 
   console.log('Seed completed!');

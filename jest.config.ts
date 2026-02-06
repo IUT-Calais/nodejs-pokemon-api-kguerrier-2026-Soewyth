@@ -1,19 +1,43 @@
-import type { Config } from 'jest';
+// import type { Config } from 'jest';
 
-const config: Config = {
-  testEnvironment: 'node',
-  transform: {
-    '^.+.tsx?$': ['ts-jest', {}],
-  },
-  coverageThreshold: {
-    global: {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
+// const config: Config = {
+//   testEnvironment: 'node',
+//   transform: {
+//     '^.+.tsx?$': ['ts-jest', {}],
+//   },
+//   coverageThreshold: {
+//     global: {
+//       branches: 100,
+//       functions: 100,
+//       lines: 100,
+//       statements: 100,
+//     },
+//   },
+//   setupFilesAfterEnv: ['./tests/jest.setup.ts'],
+// };
+
+// export default config;
+import { defineConfig } from 'vitest/config'
+import path from 'path'
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
     },
   },
-  setupFilesAfterEnv: ['./tests/jest.setup.ts'],
-};
-
-export default config;
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        '**/*.config.ts',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+      ],
+    },
+  },
+})

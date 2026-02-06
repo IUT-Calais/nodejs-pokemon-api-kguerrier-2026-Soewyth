@@ -8,18 +8,18 @@ datasource db {
 }
 
 model Type {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-  pokemons PokemonCard[] @relation("PokemonCard_type")
-  weaknesses PokemonCard[] @relation("PokemonCard_weakness")
-  attacks PokemonAttack[]
+  id         Int             @id @default(autoincrement())
+  name       String          @unique
+  pokemons   PokemonCard[]   @relation(name: "PokemonCard_type")
+  weaknesses PokemonCard[]   @relation(name: "PokemonCard_weakness")
+  attacks    PokemonAttack[] @relation(name: "PokemonAttack_type")
 }
 
 model PokemonCard {
-  id         Int     @id @default(autoincrement())
-  name       String  @unique
-  pokedexId  Int     @unique
-  type       Type    @relation(name : "PokemonCard_type", fields: [typeId], references: [id])
+  id         Int    @id @default(autoincrement())
+  name       String @unique
+  pokedexId  Int    @unique
+  type       Type   @relation(name: "PokemonCard_type", fields: [typeId], references: [id])
   typeId     Int
   lifePoints Int
 
@@ -29,22 +29,33 @@ model PokemonCard {
   weakness   Type?   @relation(name: "PokemonCard_weakness", fields: [weaknessId], references: [id])
   weaknessId Int?
 
-  attack     PokemonAttack @relation(fields: [attackId], references: [id])
-  attackId   Int
+  attack   PokemonAttack @relation(name: "PokemonAttack_card", fields: [attackId], references: [id])
+  attackId Int
+  decks    Deck[] @relation(name: "Deck_cards")
 }
 
 model PokemonAttack {
   id       Int           @id @default(autoincrement())
-  name     String
+  name     String        @unique
   damages  Int
-  type     Type          @relation(fields: [typeId], references: [id])
+  type     Type          @relation(name: "PokemonAttack_type", fields: [typeId], references: [id])
   typeId   Int
-  pokemons PokemonCard[]
+  pokemons PokemonCard[] @relation(name: "PokemonAttack_card")
 }
-
 
 model User {
   id       Int    @id @default(autoincrement())
   email    String @unique
   password String
+  decks    Deck[] @relation(name: "User_decks")
+}
+
+model Deck {
+  id      Int           @id @default(autoincrement())
+  name    String
+  cards   PokemonCard[] @relation(name: "Deck_cards")
+  owner   User          @relation(name: "User_decks", fields: [ownerId], references: [id])
+  ownerId Int
+
+  @@unique([name, ownerId]) // unicity of deck name for a given user
 }

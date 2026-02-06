@@ -1,33 +1,35 @@
 import request from 'supertest';
-import { app } from '../src';
-import { prismaMock } from './jest.setup';
-import { Response, response } from 'express';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest'
+import { app } from '../src/index.js';
+import { prismaMock } from './jest.setup.js';
 
-describe('User API', () => {
-  describe('POST /users', () => {
-    it('should create a new user', async () => {
-      const createdUser = {};
 
-      expect(response.status).toBe(201);
-      expect(response.body).toEqual(createdUser);
+describe('GET /users', () => {
+    it('should return an array of users', async () => {
+        const mockedUsersArray = [
+            { id: 1, name: 'Alice', email: '', password: '' },
+            { id: 2, name: 'Bob', email: '', password: '' },
+        ];
+        prismaMock.user.findMany.mockResolvedValue(mockedUsersArray);
+        const response = await request(app).get('/users');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockedUsersArray);
     });
-  });
-
-  describe('POST /login', () => {
-    it('should login a user and return a token', async () => {
-      const user = {};
-      const token = 'mockedToken';
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        token,
-        message: 'Connexion réussie',
-      });
-    });
-  });
 });
-function expect(status: (code: number) => Response<any, Record<string, any>>) {
-  throw new Error('Function not implemented.');
-}
 
+
+describe('GET /users/:idUser', () => {
+    it('should return the user', async () => {
+        const mockedUser = { id: 1, name: 'Alice', email: '', password: '' };
+        prismaMock.user.findUnique.mockResolvedValue(mockedUser);
+        const response = await request(app).get('/users/1');
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(mockedUser);
+    });
+    it('should return null for unknown user', async () => {
+        prismaMock.user.findUnique.mockResolvedValue(null);
+        const response = await request(app).get('/users/unknown');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({});
+    });
+});
