@@ -7,7 +7,13 @@ import { Type } from '@prisma/client';
 export const getPokemonCards = async (_req: Request, res: Response) => {
     // Fetch all pokemon cards from database and manage error
     try {
-        const pokemonCards = await prisma.pokemonCard.findMany();
+        const pokemonCards = await prisma.pokemonCard.findMany({
+            include: {
+                type: true,
+                weakness: true,
+                attack: true,
+            }
+        });
         res.status(200).json(pokemonCards);
     } catch (error) {
         res.status(500).json({ error: 'Une erreur est survenue lors de la récupération des cartes Pokémon.' });
@@ -27,6 +33,11 @@ export const getPokemonCardById = async (req: Request, res: Response) => {
     try {
         const pokemon = await prisma.pokemonCard.findUnique({
             where: { id: Number(pokemonCardId) },
+            include: {
+                type: true,
+                weakness: true,
+                attack: true,
+            }
         });
         // Handle case where pokemon card is not found
         if (!pokemon) {
