@@ -93,12 +93,12 @@ export async function loginUser(req: Request, res: Response) {
         const token = jwt.sign(
             { userId: user.id, email: user.email },
             process.env.JWT_SECRET as string,
-            { expiresIn: '2h' }
+            { expiresIn: '2'}
         );
 
         // Retourner le token
         res.status(200).json({
-            message: 'Connexion réussie.',
+            message: 'Connexion réussie.', 
             token,
             user: {
                 id: user.id,
