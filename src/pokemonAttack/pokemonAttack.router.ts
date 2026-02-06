@@ -6,8 +6,8 @@ import {
     getPokemonAttacks,
     getPokemonAttackById,
     createPokemonAttack,
-    // updatePokemonAttack,
-    // deletePokemonAttack
+    updatePokemonAttack,
+    deletePokemonAttack
 } from './pokemonAttack.controller';
 
 // Create router
@@ -18,5 +18,5 @@ pokemonAttackRouter.get('/', getPokemonAttacks);
 pokemonAttackRouter.get('/:attackId', getPokemonAttackById);
 
 pokemonAttackRouter.post('/', verifyJWT, createPokemonAttack);
-// pokemonAttackRouter.patch('/:attackId', verifyJWT, updatePokemonAttack);
-// pokemonAttackRouter.delete('/:attackId', verifyJWT, deletePokemonAttack);
+pokemonAttackRouter.patch('/:attackId', verifyJWT, updatePokemonAttack);
+pokemonAttackRouter.delete('/:attackId', verifyJWT, deletePokemonAttack);
