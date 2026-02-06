@@ -54,7 +54,7 @@ export const getPokemonCardById = async (req: Request, res: Response) => {
 
 // Create a new pokemon card
 export const createPokemonCard = async (req: Request, res: Response) => {
-    const { name, pokedexId, type, lifePoints, size, weight, imageUrl, weakness } = req.body;
+    const { name, pokedexId, type, lifePoints, size, weight, imageUrl, weakness, attack } = req.body;
 
     // Required field
     if (!name) {
@@ -74,12 +74,17 @@ export const createPokemonCard = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Le champ 'lifePoints' est requis." });
         return;
     }
+    if (attack === undefined || attack === null) {
+        res.status(400).json({ error: "Le champ 'attack' est requis." });
+        return;
+    }
 
     // Create number fields
     const pokedexIdNumber = Number(pokedexId);
     const typeIdNumber = Number(type);
     const lifePointsNumber = Number(lifePoints);
     const weaknessIdNumber = Number(weakness);
+    const attackIdNumber = Number(attack);
     // Verification of number type
     if (isNaN(pokedexIdNumber)) {
         res.status(400).json({ error: "Le champ 'pokedexId' doit être un nombre." });
@@ -93,9 +98,13 @@ export const createPokemonCard = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Le champ 'lifePoints' doit être un nombre." });
         return;
     }
+    if (isNaN(attackIdNumber)) {
+        res.status(400).json({ error: "Le champ 'attack' doit être un nombre." });
+        return;
+    }
     // Validation du champ weakness 
     if (isNaN(weakness)) {
-        res.status(400).json({ error: "Le champ 'lifePoints' doit être un nombre." });
+        res.status(400).json({ error: "Le champ 'weakness' doit être un nombre." });
         return;
     }
 
@@ -111,7 +120,16 @@ export const createPokemonCard = async (req: Request, res: Response) => {
             return;
         }
 
-        // Vérification du weakness si fourni
+        
+        const existingAttack = await prisma.pokemonAttack.findUnique({
+            where: { id: attackIdNumber },
+        });
+        if (!existingAttack) {
+            res.status(400).json({ error: `L'attaque avec l'id '${attackIdNumber}' n'existe pas.` });
+            return;
+        }
+
+        // Vérification of weakness type if provided
         if (weaknessIdNumber !== undefined) {
             const existingWeaknessType = await prisma.type.findUnique({
                 where: { id: weaknessIdNumber },
@@ -148,6 +166,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
                 weight: weight,
                 imageUrl: imageUrl,
                 weaknessId: weaknessIdNumber,
+                attackId: attackIdNumber,
             }
         });
         // Send back the created pokemon card
