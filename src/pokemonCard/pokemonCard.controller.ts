@@ -43,7 +43,7 @@ export const getPokemonCardById = async (req: Request, res: Response) => {
 
 // Create a new pokemon card
 export const createPokemonCard = async (req: Request, res: Response) => {
-    const { name, pokedexId, type, lifePoints, size, weight, imageUrl } = req.body;
+    const { name, pokedexId, type, lifePoints, size, weight, imageUrl, weakness } = req.body;
 
     // Required field
     if (!name) {
@@ -68,6 +68,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
     const pokedexIdNumber = Number(pokedexId);
     const typeIdNumber = Number(type);
     const lifePointsNumber = Number(lifePoints);
+    const weaknessIdNumber = Number(weakness);
     // Verification of number type
     if (isNaN(pokedexIdNumber)) {
         res.status(400).json({ error: "Le champ 'pokedexId' doit être un nombre." });
@@ -81,6 +82,14 @@ export const createPokemonCard = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Le champ 'lifePoints' doit être un nombre." });
         return;
     }
+    // Validation du champ weakness 
+    if (isNaN(weakness)) {
+        res.status(400).json({ error: "Le champ 'lifePoints' doit être un nombre." });
+        return;
+    }
+
+
+
     try {
         // Check for existing name or pokedexId
         const existingType = await prisma.type.findUnique({
@@ -90,6 +99,18 @@ export const createPokemonCard = async (req: Request, res: Response) => {
             res.status(400).json({ error: `Le type avec l'id '${typeIdNumber}' n'existe pas.` });
             return;
         }
+
+        // Vérification du weakness si fourni
+        if (weaknessIdNumber !== undefined) {
+            const existingWeaknessType = await prisma.type.findUnique({
+                where: { id: weaknessIdNumber },
+            });
+            if (!existingWeaknessType) {
+                res.status(400).json({ error: `Le type weakness avec l'id '${weaknessIdNumber}' n'existe pas.` });
+                return;
+            }
+        }
+
         const existingName = await prisma.pokemonCard.findUnique({
             where: { name: name },
         });
@@ -115,6 +136,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
                 size: size,
                 weight: weight,
                 imageUrl: imageUrl,
+                weaknessId: weaknessIdNumber,
             }
         });
         // Send back the created pokemon card
@@ -132,7 +154,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
 
 export const updatePokemonCard = async (req: Request, res: Response) => {
     const { pokemonCardId } = req.params;
-    const { name, pokedexId, type, lifePoints, size, weight, imageUrl } = req.body;
+    const { name, pokedexId, type, lifePoints, size, weight, imageUrl, weakness } = req.body;
 
     // Validation de l'ID
     const id = Number(pokemonCardId);
@@ -149,6 +171,7 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
         size?: number;
         weight?: number;
         imageUrl?: string;
+        weaknessId?: number;
     } = {};
 
     // Assign values to dataToUpdate
@@ -173,6 +196,9 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
     if (imageUrl !== undefined) {
         dataToUpdate.imageUrl = imageUrl;
     }
+    if (weakness !== undefined) {
+        dataToUpdate.weaknessId = weakness;
+    }
 
     // verify number fields
     if (dataToUpdate.pokedexId !== undefined && isNaN(dataToUpdate.pokedexId!)) {
@@ -195,6 +221,10 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Le champ 'weight' doit être un nombre." });
         return;
     }
+    if (dataToUpdate.weaknessId !== undefined && dataToUpdate.weaknessId !== null && isNaN(dataToUpdate.weaknessId)) {
+        res.status(400).json({ error: "Le champ 'weakness' doit être un nombre." });
+        return;
+    }
 
 
     try {
@@ -213,6 +243,14 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
             const existingType = await prisma.type.findUnique({ where: { id: dataToUpdate.typeId } });
             if (!existingType) {
                 res.status(400).json({ error: `Le type avec l'id '${dataToUpdate.typeId}' n'existe pas.` });
+                return;
+            }
+        }
+        // Check for existing weakness type
+        if (dataToUpdate.weaknessId !== undefined) {
+            const existingWeaknessType = await prisma.type.findUnique({ where: { id: dataToUpdate.weaknessId } });
+            if (!existingWeaknessType) {
+                res.status(400).json({ error: `Le type weakness avec l'id '${dataToUpdate.weaknessId}' n'existe pas.` });
                 return;
             }
         }

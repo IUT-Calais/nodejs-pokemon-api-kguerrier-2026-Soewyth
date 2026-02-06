@@ -11,6 +11,7 @@ model Type {
   id   Int    @id @default(autoincrement())
   name String @unique
   pokemons PokemonCard[] @relation("PokemonCard_type")
+  weaknesses PokemonCard[] @relation("PokemonCard_weakness")
 }
 
 model PokemonCard {
@@ -24,6 +25,8 @@ model PokemonCard {
   size       Float?
   weight     Float?
   imageUrl   String?
+  weakness   Type?   @relation(name: "PokemonCard_weakness", fields: [weaknessId], references: [id])
+  weaknessId Int?
 
 }
 
