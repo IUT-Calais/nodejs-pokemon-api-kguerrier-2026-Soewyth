@@ -12,6 +12,7 @@ model Type {
   name String @unique
   pokemons PokemonCard[] @relation("PokemonCard_type")
   weaknesses PokemonCard[] @relation("PokemonCard_weakness")
+  attacks PokemonAttack[]
 }
 
 model PokemonCard {
@@ -28,7 +29,19 @@ model PokemonCard {
   weakness   Type?   @relation(name: "PokemonCard_weakness", fields: [weaknessId], references: [id])
   weaknessId Int?
 
+  attack     PokemonAttack @relation(fields: [attackId], references: [id])
+  attackId   Int
 }
+
+model PokemonAttack {
+  id       Int           @id @default(autoincrement())
+  name     String
+  damages  Int
+  type     Type          @relation(fields: [typeId], references: [id])
+  typeId   Int
+  pokemons PokemonCard[]
+}
+
 
 model User {
   id       Int    @id @default(autoincrement())
