@@ -2,21 +2,31 @@ import express from 'express';
 import { pokemonCardRouter } from './pokemonCard/pokemonCard.router';
 import { pokemonAttackRouter } from './pokemonAttack/pokemonAttack.router';
 import { userRouter } from './user/user.router';
-import { deckRouter } from './deck/deck.router';
+import { pokemonDeckRouter } from './deck/deck.router';
 export const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
 // routers for different resources
-app.use('/pokemons-cards', pokemonCardRouter);
+app.use('/pokemon-cards', pokemonCardRouter);
 app.use('/pokemons-attacks', pokemonAttackRouter);
 app.use('/users', userRouter);
-app.use('/decks', deckRouter);
+app.use('/decks', pokemonDeckRouter);
 
-export const server = app.listen(port);
+let server: ReturnType<typeof app.listen> | null = null;
 
-console.log(`Le serveur est démarré sur le port :  '${port}'`);
-// export function stopServer() {
-//   server.close();
-// }
+// Ne démarre le serveur que si le fichier est exécuté directement (pas lors des tests)
+if (require.main === module) {
+  server = app.listen(port);
+  console.log(`Le serveur est démarré sur le port :  '${port}'`);
+}
+
+export function stopServer() {
+  if (server) {
+    server.close();
+    server = null;
+  }
+}
+
+export { server };
