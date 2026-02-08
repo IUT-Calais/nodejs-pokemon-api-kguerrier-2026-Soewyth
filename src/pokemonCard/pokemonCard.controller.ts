@@ -83,7 +83,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
     const pokedexIdNumber = Number(pokedexId);
     const typeIdNumber = Number(type);
     const lifePointsNumber = Number(lifePoints);
-    const weaknessIdNumber = Number(weakness);
+    const weaknessIdNumber = weakness !== undefined && weakness !== null ? Number(weakness) : undefined;
     const attackIdNumber = Number(attack);
     // Verification of number type
     if (isNaN(pokedexIdNumber)) {
@@ -103,7 +103,7 @@ export const createPokemonCard = async (req: Request, res: Response) => {
         return;
     }
     // Validation du champ weakness 
-    if (isNaN(weakness)) {
+    if (weakness !== undefined && weakness !== null && isNaN(weaknessIdNumber!)) {
         res.status(400).json({ error: "Le champ 'weakness' doit être un nombre." });
         return;
     }
@@ -251,7 +251,8 @@ export const updatePokemonCard = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Le champ 'weight' doit être un nombre." });
         return;
     }
-    if (dataToUpdate.weaknessId !== undefined && dataToUpdate.weaknessId !== null && isNaN(dataToUpdate.weaknessId)) {
+    const weaknessIdNumber = weakness !== undefined && weakness !== null ? Number(weakness) : undefined;
+    if (weakness !== undefined && weakness !== null && isNaN(weaknessIdNumber!)) {
         res.status(400).json({ error: "Le champ 'weakness' doit être un nombre." });
         return;
     }
