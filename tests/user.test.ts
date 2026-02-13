@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { app } from '../src';
 import { prismaMock } from './jest.setup';
+import bcrypt from 'bcrypt';
+
 
 // Test  for getting all users
 describe('GET /users', () => {
@@ -152,3 +154,421 @@ describe('GET /users/:id', () => {
     expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la récupération de l'utilisateur.");
   });
 });
+
+// Test suite for creating a new user
+describe('POST /users', () => {
+  // Should successfully create a new user
+  it('should create a new user', async () => {
+    const newUser = {
+      email: 'newuser@example.com',
+      password: 'password123'
+    };
+
+    const createdUser = {
+      id: 1,
+      email: 'newuser@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockResolvedValue(createdUser as any);
+
+    const response = await request(app)
+      .post('/users')
+      .send(newUser);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty('message', 'Utilisateur créé avec succès.');
+    expect(response.body).toHaveProperty('result');
+    expect(response.body.result).toHaveProperty('id', 1);
+    expect(response.body.result).toHaveProperty('email', 'newuser@example.com');
+    expect(response.body.result).not.toHaveProperty('password');
+  });
+
+  // Should return 400 if email is missing
+  it('should return 400 if email is missing', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({ password: 'password123' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Le champ 'email' est requis.");
+  });
+
+  // Should return 400 if password is missing
+  it('should return 400 if password is missing', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({ email: 'test@example.com' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Le champ 'password' est requis.");
+  });
+
+  // Should return 400 if user already exists
+  it('should return 400 if user already exists', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'existing@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
+
+    const response = await request(app)
+      .post('/users')
+      .send({ email: 'existing@example.com', password: 'password123' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Un utilisateur avec l'email 'existing@example.com' existe déjà.");
+  });
+
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.user.findUnique.mockRejectedValue(new Error('Database error'));
+
+    const response = await request(app)
+      .post('/users')
+      .send({ email: 'test@example.com', password: 'password123' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la création de l'utilisateur.");
+  });
+});
+
+// Test suite for user login
+describe('POST /users/login', () => {
+  // Should successfully login a user
+  it('should login user and return token', async () => {
+    const mockUser = {
+      id: 1,
+      email: 'user@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
+
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'user@example.com', password: 'truePassword' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Connexion réussie.');
+    expect(response.body).toHaveProperty('token');
+    expect(response.body).toHaveProperty('user');
+    expect(response.body.user).toHaveProperty('id', 1);
+    expect(response.body.user).toHaveProperty('email', 'user@example.com');
+    expect(response.body.user).not.toHaveProperty('password');
+  });
+
+  // Should return 400 if email is missing
+  it('should return 400 if email is missing', async () => {
+    const response = await request(app)
+      .post('/users/login')
+      .send({ password: 'password123' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Le champ 'email' est requis.");
+  });
+
+  // Should return 400 if password is missing
+  it('should return 400 if password is missing', async () => {
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'test@example.com' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Le champ 'password' est requis.");
+  });
+
+  // Should return 401 if user doesn't exist
+  it('should return 401 if user does not exist', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'unknown@example.com', password: 'password123' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Email ou mot de passe incorrect.');
+  });
+
+  // Should return 401 if password is incorrect
+  it('should return 401 if password is incorrect', async () => {
+    const mockUser = {
+      id: 1,
+      email: 'user@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
+
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'user@example.com', password: 'wrongpassword' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Email ou mot de passe incorrect.');
+  });
+
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.user.findUnique.mockRejectedValue(new Error('Database error'));
+
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'test@example.com', password: 'password123' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'Une erreur est survenue lors de la connexion.');
+  });
+});
+
+// Test suite for updating a user
+describe('PATCH /users/:id', () => {
+  // Should successfully update user email
+  it('should update user email', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'old@example.com',
+      password: 'hashedPassword'
+    };
+
+    const updatedUser = {
+      id: 1,
+      email: 'new@example.com'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(existingUser as any);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null); // Email doesn't exist
+    prismaMock.user.update.mockResolvedValue(updatedUser as any);
+
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Utilisateur mis à jour avec succès.');
+    expect(response.body).toHaveProperty('result');
+    expect(response.body.result).toHaveProperty('email', 'new@example.com');
+  });
+
+  // Should successfully update user password
+  it('should update user password', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'user@example.com',
+      password: 'oldHashedPassword'
+    };
+
+    const updatedUser = {
+      id: 1,
+      email: 'user@example.com'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
+    prismaMock.user.update.mockResolvedValue(updatedUser as any);
+
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ password: 'newPassword123' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Utilisateur mis à jour avec succès.');
+    expect(response.body).toHaveProperty('result');
+  });
+
+  // Should successfully update both email and password
+  it('should update both email and password', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'old@example.com',
+      password: 'oldHashedPassword'
+    };
+
+    const updatedUser = {
+      id: 1,
+      email: 'new@example.com'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(existingUser as any);
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+    prismaMock.user.update.mockResolvedValue(updatedUser as any);
+
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'new@example.com', password: 'newPassword123' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Utilisateur mis à jour avec succès.');
+  });
+
+  // Should require authentication token
+  it('should return 401 without token', async () => {
+    const response = await request(app)
+      .patch('/users/1')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should validate authentication token
+  it('should return 401 with invalid token', async () => {
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer invalidToken')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should return 400 for invalid id
+  it('should return 400 for invalid id', async () => {
+    const response = await request(app)
+      .patch('/users/invalid')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "L'ID doit être un nombre valide.");
+  });
+
+  // Should return 400 if no field is provided
+  it('should return 400 if no field is provided', async () => {
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Au moins un champ 'email' ou 'password' doit être fourni.");
+  });
+
+  // Should return 404 if user doesn't exist
+  it('should return 404 if user does not exist', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    const response = await request(app)
+      .patch('/users/999')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('error', "Utilisateur avec l'ID 999 non trouvé.");
+  });
+
+  // Should return 400 if email already exists
+  it('should return 400 if email already exists', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'user1@example.com',
+      password: 'hashedPassword'
+    };
+
+    const anotherUser = {
+      id: 2,
+      email: 'user2@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(existingUser as any);
+    prismaMock.user.findUnique.mockResolvedValueOnce(anotherUser as any);
+
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'user2@example.com' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "Un utilisateur avec l'email 'user2@example.com' existe déjà.");
+  });
+
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.user.findUnique.mockRejectedValue(new Error('Database error'));
+
+    const response = await request(app)
+      .patch('/users/1')
+      .set('Authorization', 'Bearer mockedToken')
+      .send({ email: 'new@example.com' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la mise à jour de l'utilisateur.");
+  });
+});
+
+// Test suite for deleting a user
+describe('DELETE /users/:id', () => {
+  // Should successfully delete a user
+  it('should delete user successfully', async () => {
+    const existingUser = {
+      id: 1,
+      email: 'user@example.com',
+      password: 'hashedPassword'
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(existingUser as any);
+    prismaMock.user.delete.mockResolvedValue(existingUser as any);
+
+    const response = await request(app)
+      .delete('/users/1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Utilisateur supprimé avec succès.');
+  });
+
+  // Should require authentication token
+  it('should return 401 without token', async () => {
+    const response = await request(app).delete('/users/1');
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should validate authentication token
+  it('should return 401 with invalid token', async () => {
+    const response = await request(app)
+      .delete('/users/1')
+      .set('Authorization', 'Bearer invalidToken');
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should return 400 for invalid id
+  it('should return 400 for invalid id', async () => {
+    const response = await request(app)
+      .delete('/users/invalid')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "L'ID doit être un nombre valide.");
+  });
+
+  // Should return 404 if user doesn't exist
+  it('should return 404 if user does not exist', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    const response = await request(app)
+      .delete('/users/999')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('error', "Utilisateur avec l'ID 999 non trouvé.");
+  });
+
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.user.findUnique.mockRejectedValue(new Error('Database error'));
+
+    const response = await request(app)
+      .delete('/users/1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la suppression de l'utilisateur.");
+  });
+});
+
