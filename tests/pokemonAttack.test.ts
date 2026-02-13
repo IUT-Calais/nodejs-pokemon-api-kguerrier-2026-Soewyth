@@ -434,3 +434,104 @@ describe('PATCH /pokemon-attacks/:attackId', () => {
     expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la mise à jour de l'attaque Pokémon.");
   });
 });
+
+// Test suite for deleting a pokemon attack
+describe('DELETE /pokemon-attacks/:attackId', () => {
+  const existingAttack = {
+    id: 1,
+    name: 'Thunderbolt',
+    damages: 90,
+    typeId: 1
+  };
+
+  // Should successfully delete a pokemon attack
+  it('should delete a pokemon attack', async () => {
+    prismaMock.pokemonAttack.findUnique.mockResolvedValue(existingAttack as any);
+    prismaMock.pokemonCard.findMany.mockResolvedValue([]);
+    prismaMock.pokemonAttack.delete.mockResolvedValue(existingAttack as any);
+
+    const response = await request(app)
+      .delete('/pokemon-attacks/1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Attaque Pokémon supprimée avec succès.');
+  });
+
+  // Should require authentication token
+  it('should return 401 without token', async () => {
+    const response = await request(app).delete('/pokemon-attacks/1');
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should validate authentication token
+  it('should return 401 with invalid token', async () => {
+    const response = await request(app)
+      .delete('/pokemon-attacks/1')
+      .set('Authorization', 'Bearer invalidToken');
+
+    expect(response.status).toBe(401);
+  });
+
+  // Should validate that ID is a number
+  it('should return 400 for invalid id', async () => {
+    const response = await request(app)
+      .delete('/pokemon-attacks/invalid')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "L'id doit être un nombre valide.");
+  });
+
+  // Should validate that ID is positive
+  it('should return 400 for negative id', async () => {
+    const response = await request(app)
+      .delete('/pokemon-attacks/-1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', "L'id doit être un nombre valide.");
+  });
+
+  it('should return 404 if pokemon attack does not exist', async () => {
+    prismaMock.pokemonAttack.findUnique.mockResolvedValue(null);
+
+    const response = await request(app)
+      .delete('/pokemon-attacks/999')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('error', "L'attaque avec l'id '999' n'existe pas.");
+  });
+
+  // Should not delete attack if used by pokemon cards
+  it('should return 400 if attack is used by pokemon cards', async () => {
+    const mockCards = [
+      { id: 1, name: 'Pikachu', attackId: 1 },
+      { id: 2, name: 'Raichu', attackId: 1 }
+    ];
+
+    prismaMock.pokemonAttack.findUnique.mockResolvedValue(existingAttack as any);
+    prismaMock.pokemonCard.findMany.mockResolvedValue(mockCards as any);
+
+    const response = await request(app)
+      .delete('/pokemon-attacks/1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', 'Impossible de supprimer cette attaque car elle est utilisée par 2 carte(s) Pokémon.');
+  });
+
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.pokemonAttack.findUnique.mockRejectedValue(new Error('Database error'));
+
+    const response = await request(app)
+      .delete('/pokemon-attacks/1')
+      .set('Authorization', 'Bearer mockedToken');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', "Une erreur est survenue lors de la suppression de l'attaque Pokémon.");
+  });
+});
