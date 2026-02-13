@@ -1,117 +1,57 @@
-// import request from 'supertest';
-// import { app } from '../src';
-// import { prismaMock } from './jest.setup';
-// import { describe, it } from 'node:test';
-// import { response } from 'express';
+import request from 'supertest';
+import { app } from '../src';
+import { prismaMock } from './jest.setup';
 
-// describe('Deck API', () => {
-//   describe('GET /decks', () => {
-//     it('should fetch all decks', async () => {
-//       const mockDecks: never[] = [];
+// Test suite for getting all decks
+describe('GET /decks', () => {
+  // Should successfully retrieve a list of decks
+  it('should return an array of decks', async () => {
+    const mockDecks = [
+      {
+        id: 1,
+        name: 'Electric Deck',
+        ownerId: 1,
+        owner: { id: 1, email: 'user@example.com' },
+        cards: []
+      },
+      {
+        id: 2,
+        name: 'Fire Deck',
+        ownerId: 2,
+        owner: { id: 2, email: 'user2@example.com' },
+        cards: []
+      }
+    ];
 
-//       expect(response.status).toBe(200);
-//       expect(response.body).toEqual(mockDecks);
-//     });
-//   });
+    prismaMock.deck.findMany.mockResolvedValue(mockDecks as any);
 
-//   describe('GET /decks/:deckId', () => {
-//     it('should fetch a deck by ID', async () => {
-//       const mockDeck = {};
+    const response = await request(app).get('/decks');
 
-//       expect(response.status).toBe(200);
-//       expect(response.body).toEqual(mockDeck);
-//     });
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(2);
+    expect(response.body[0]).toHaveProperty('id');
+    expect(response.body[0]).toHaveProperty('name');
+    expect(response.body[0]).toHaveProperty('owner');
+    expect(response.body[0]).toHaveProperty('cards');
+  });
 
-//     it('should return 404 if deck is not found', async () => {
-//       expect(response.status).toBe(404);
-//       expect(response.body).toEqual({ error: 'Deck non trouvé' });
-//     });
-//   });
+  // Should return an empty array when database has no decks
+  it('should return empty array when no decks', async () => {
+    prismaMock.deck.findMany.mockResolvedValue([]);
 
-//   describe('POST /decks', () => {
-//     it('should create a new deck', async () => {
-//       const createdDeck = {};
+    const response = await request(app).get('/decks');
 
-//       expect(response.status).toBe(201);
-//       expect(response.body).toEqual(createdDeck);
-//     });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
 
-//     it('should return 400 if name is missing', async () => {
-//       expect(response.status).toBe(400);
-//       expect(response.body).toEqual({ error: "Le champ 'name' est requis." });
-//     });
+  // Should handle database errors gracefully
+  it('should return 500 on database error', async () => {
+    prismaMock.deck.findMany.mockRejectedValue(new Error('Database error'));
 
-//     it('should return 400 if ownerId is missing', async () => {
-//       expect(response.status).toBe(400);
-//       expect(response.body).toEqual({ error: "Le champ 'ownerId' est requis." });
-//     });
-//   });
+    const response = await request(app).get('/decks');
 
-//   describe('PATCH /decks/:deckId', () => {
-//     it('should update an existing deck', async () => {
-//       const updatedDeck = {};
-
-//       expect(response.status).toBe(200);
-//       expect(response.body).toEqual(updatedDeck);
-//     });
-
-//     it('should return 404 if deck is not found', async () => {
-//       expect(response.status).toBe(404);
-//     });
-//   });
-
-//   describe('DELETE /decks/:deckId', () => {
-//     it('should delete a deck', async () => {
-//       expect(response.status).toBe(200);
-//       expect(response.body).toEqual({ message: 'Deck supprimé avec succès.' });
-//     });
-
-//     it('should return 404 if deck is not found', async () => {
-//       expect(response.status).toBe(404);
-//     });
-//   });
-
-//   describe('POST /decks/:deckId/cards', () => {
-//     it('should add a card to a deck', async () => {
-//       const updatedDeck = {};
-
-//       expect(response.status).toBe(200);
-//       expect(response.body.message).toBe('Carte ajoutée au deck avec succès.');
-//     });
-
-//     it('should return 404 if deck is not found', async () => {
-//       expect(response.status).toBe(404);
-//     });
-
-//     it('should return 404 if card is not found', async () => {
-//       expect(response.status).toBe(404);
-//     });
-
-//     it('should return 400 if card is already in deck', async () => {
-//       expect(response.status).toBe(400);
-//       expect(response.body).toEqual({ error: 'Cette carte est déjà dans le deck.' });
-//     });
-//   });
-
-//   describe('DELETE /decks/:deckId/cards/:cardId', () => {
-//     it('should remove a card from a deck', async () => {
-//       const updatedDeck = {};
-
-//       expect(response.status).toBe(200);
-//       expect(response.body.message).toBe('Carte retirée du deck avec succès.');
-//     });
-
-//     it('should return 404 if deck is not found', async () => {
-//       expect(response.status).toBe(404);
-//     });
-
-//     it('should return 400 if card is not in deck', async () => {
-//       expect(response.status).toBe(400);
-//       expect(response.body).toEqual({ error: "Cette carte n'est pas dans le deck." });
-//     });
-//   });
-// });
-
-// function expect(status: any) {
-//   throw new Error('Function not implemented.');
-// }
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'Une erreur est survenue lors de la récupération des decks.');
+  });
+});
