@@ -283,3 +283,125 @@ describe('POST /decks', () => {
         expect(response.body).toHaveProperty('error', 'Une erreur est survenue lors de la création du deck.');
     });
 });
+
+// Test suite for updating an existing deck
+describe('PATCH /decks/:deckId', () => {
+    const existingDeck = {
+        id: 1,
+        name: 'Electric Deck',
+        ownerId: 1
+    };
+
+    // Should successfully update a deck
+    it('should update a deck', async () => {
+        const updateData = { name: 'Thunder Deck' };
+        const updatedDeck = { ...existingDeck, name: 'Thunder Deck', owner: { id: 1 }, cards: [] };
+
+        prismaMock.deck.findUnique.mockResolvedValue(existingDeck as any);
+        prismaMock.deck.findFirst.mockResolvedValue(null);
+        prismaMock.deck.update.mockResolvedValue(updatedDeck as any);
+
+        const response = await request(app)
+            .patch('/decks/1')
+            .set('Authorization', 'Bearer mockedToken')
+            .send(updateData);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', 'Deck mis à jour avec succès.');
+        expect(response.body).toHaveProperty('result');
+    });
+
+    // Should successfully update deck cards
+    it('should update deck cards', async () => {
+        const updateData = { cards: [4, 5, 6] };
+        const updatedDeck = {
+            ...existingDeck,
+            owner: { id: 1 },
+            cards: [{ id: 4 }, { id: 5 }, { id: 6 }]
+        };
+
+        prismaMock.deck.findUnique.mockResolvedValue(existingDeck as any);
+        prismaMock.deck.update.mockResolvedValue(updatedDeck as any);
+
+        const response = await request(app)
+            .patch('/decks/1')
+            .set('Authorization', 'Bearer mockedToken')
+            .send(updateData);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', 'Deck mis à jour avec succès.');
+        expect(response.body).toHaveProperty('result');
+    });
+
+    // Should require authentication token
+    it('should return 401 without token', async () => {
+        const response = await request(app)
+            .patch('/decks/1')
+            .send({ name: 'Updated' });
+
+        expect(response.status).toBe(401);
+    });
+
+    // Should validate authentication token
+    it('should return 401 with invalid token', async () => {
+        const response = await request(app)
+            .patch('/decks/1')
+            .set('Authorization', 'Bearer invalidToken')
+            .send({ name: 'Updated' });
+
+        expect(response.status).toBe(401);
+    });
+
+    // Should validate that ID is a number
+    it('should return 400 for invalid id', async () => {
+        const response = await request(app)
+            .patch('/decks/invalid')
+            .set('Authorization', 'Bearer mockedToken')
+            .send({ name: 'Updated' });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', "L'id doit être un nombre valide.");
+    });
+
+    it('should return 404 if deck does not exist', async () => {
+        prismaMock.deck.findUnique.mockResolvedValue(null);
+
+        const response = await request(app)
+            .patch('/decks/999')
+            .set('Authorization', 'Bearer mockedToken')
+            .send({ name: 'Updated' });
+
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('error', "Le deck avec l'id '999' n'existe pas.");
+    });
+
+    // Should enforce unique name per user
+    it('should return 400 if name already exists for this user', async () => {
+        const otherDeck = { id: 2, name: 'Fire Deck', ownerId: 1 };
+
+        prismaMock.deck.findUnique.mockResolvedValue(existingDeck as any);
+        prismaMock.deck.findFirst.mockResolvedValue(otherDeck as any);
+
+        const response = await request(app)
+            .patch('/decks/1')
+            .set('Authorization', 'Bearer mockedToken')
+            .send({ name: 'Fire Deck' });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', "Un deck avec le nom 'Fire Deck' existe déjà pour cet utilisateur.");
+    });
+
+    // Should handle database errors gracefully
+    it('should return 500 on database error', async () => {
+        prismaMock.deck.findUnique.mockRejectedValue(new Error('Database error'));
+
+        const response = await request(app)
+            .patch('/decks/1')
+            .set('Authorization', 'Bearer mockedToken')
+            .send({ name: 'Updated' });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Une erreur est survenue lors de la mise à jour du deck.');
+    });
+});
+
