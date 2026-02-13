@@ -10,7 +10,7 @@ app.use(express.json());
 
 // routers for different resources
 app.use('/pokemon-cards', pokemonCardRouter);
-app.use('/pokemons-attacks', pokemonAttackRouter);
+app.use('/pokemon-attacks', pokemonAttackRouter);
 app.use('/users', userRouter);
 app.use('/decks', pokemonDeckRouter);
 
