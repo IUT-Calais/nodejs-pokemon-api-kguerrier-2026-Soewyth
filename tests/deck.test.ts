@@ -405,3 +405,85 @@ describe('PATCH /decks/:deckId', () => {
     });
 });
 
+
+
+// Test suite for deleting a deck
+describe('DELETE /decks/:deckId', () => {
+    const existingDeck = {
+        id: 1,
+        name: 'Electric Deck',
+        ownerId: 1
+    };
+
+    // Should successfully delete a deck
+    it('should delete a deck', async () => {
+        prismaMock.deck.findUnique.mockResolvedValue(existingDeck as any);
+        prismaMock.deck.delete.mockResolvedValue(existingDeck as any);
+
+        const response = await request(app)
+            .delete('/decks/1')
+            .set('Authorization', 'Bearer mockedToken');
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('message', 'Deck supprimé avec succès.');
+    });
+
+    // Should require authentication token
+    it('should return 401 without token', async () => {
+        const response = await request(app).delete('/decks/1');
+
+        expect(response.status).toBe(401);
+    });
+
+    // Should validate authentication token
+    it('should return 401 with invalid token', async () => {
+        const response = await request(app)
+            .delete('/decks/1')
+            .set('Authorization', 'Bearer invalidToken');
+
+        expect(response.status).toBe(401);
+    });
+
+    // Should validate that ID is a number
+    it('should return 400 for invalid id', async () => {
+        const response = await request(app)
+            .delete('/decks/invalid')
+            .set('Authorization', 'Bearer mockedToken');
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', "L'id doit être un nombre valide.");
+    });
+
+    // Should validate that ID is positive
+    it('should return 400 for negative id', async () => {
+        const response = await request(app)
+            .delete('/decks/-1')
+            .set('Authorization', 'Bearer mockedToken');
+
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error', "L'id doit être un nombre valide.");
+    });
+
+    it('should return 404 if deck does not exist', async () => {
+        prismaMock.deck.findUnique.mockResolvedValue(null);
+
+        const response = await request(app)
+            .delete('/decks/999')
+            .set('Authorization', 'Bearer mockedToken');
+
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty('error', "Le deck avec l'id '999' n'existe pas.");
+    });
+
+    // Should handle database errors gracefully
+    it('should return 500 on database error', async () => {
+        prismaMock.deck.findUnique.mockRejectedValue(new Error('Database error'));
+
+        const response = await request(app)
+            .delete('/decks/1')
+            .set('Authorization', 'Bearer mockedToken');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty('error', 'Une erreur est survenue lors de la suppression du deck.');
+    });
+});
