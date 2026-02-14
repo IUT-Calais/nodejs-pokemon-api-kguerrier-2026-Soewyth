@@ -241,3 +241,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /pokemon-attacks/{attackId}:
+    get:
+      tags:
+        - PokemonAttack
+      summary: Récupérer une attaque par ID
+      description: Retourne une attaque Pokémon spécifique
+      parameters:
+        - name: attackId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de l'attaque
+      responses:
+        '200':
+          description: Attaque trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PokemonAttack'
+        '400':
+          description: ID invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Attaque non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - PokemonAttack
+      summary: Modifier une attaque
+      description: Met à jour une attaque Pokémon (nécessite une authentification)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: attackId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de l'attaque
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PokemonAttack'
+      responses:
+        '200':
+          description: Attaque mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PokemonAttack'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Attaque non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - PokemonAttack
+      summary: Supprimer une attaque
+      description: Supprime une attaque Pokémon (nécessite une authentification)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: attackId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de l'attaque
+      responses:
+        '200':
+          description: Attaque supprimée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Attaque supprimée avec succès."
+        '400':
+          description: ID invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Attaque non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
