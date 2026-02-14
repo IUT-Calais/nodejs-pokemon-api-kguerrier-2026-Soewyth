@@ -840,3 +840,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Type:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Plante
+
+    PokemonCard:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Bulbizarre
+        pokedexId:
+          type: integer
+          example: 1
+        typeId:
+          type: integer
+          example: 1
+        lifePoints:
+          type: integer
+          example: 45
+        size:
+          type: number
+          example: 0.7
+        weight:
+          type: number
+          example: 6.9
+        imageUrl:
+          type: string
+          example: https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png
+        weaknessId:
+          type: integer
+          example: 2
+        attackId:
+          type: integer
+          example: 1
+
+    PokemonAttack:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Charge
+        damages:
+          type: integer
+          example: 40
+        typeId:
+          type: integer
+          example: 1
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: admin@gmail.com
+
+    Deck:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Mon deck principal
+        ownerId:
+          type: integer
+          example: 1
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Message d'erreur
