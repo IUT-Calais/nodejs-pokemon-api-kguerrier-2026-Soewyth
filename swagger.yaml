@@ -63,7 +63,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
- /pokemon-cards/{pokemonCardId}:
+
+  /pokemon-cards/{pokemonCardId}:
     get:
       tags:
         - PokemonCard
@@ -181,6 +182,61 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Carte non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pokemon-attacks:
+    get:
+      tags:
+        - PokemonAttack
+      summary: Récupérer toutes les attaques Pokémon
+      description: Retourne la liste complète des attaques Pokémon
+      responses:
+        '200':
+          description: Liste des attaques
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PokemonAttack'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - PokemonAttack
+      summary: Créer une nouvelle attaque
+      description: Crée une nouvelle attaque Pokémon (nécessite une authentification)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PokemonAttack'
+      responses:
+        '201':
+          description: Attaque créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PokemonAttack'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
           content:
             application/json:
               schema:
