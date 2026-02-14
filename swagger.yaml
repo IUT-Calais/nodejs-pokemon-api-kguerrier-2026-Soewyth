@@ -643,3 +643,200 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /decks:
+    get:
+      tags:
+        - Deck
+      summary: Récupérer tous les decks
+      description: Retourne la liste complète des decks
+      responses:
+        '200':
+          description: Liste des decks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deck'
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Deck
+      summary: Créer un nouveau deck
+      description: Crée un nouveau deck (nécessite une authentification, le propriétaire est défini automatiquement)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - cards
+              properties:
+                name:
+                  type: string
+                  example: "Mon deck Feu"
+                cards:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2, 3]
+      responses:
+        '201':
+          description: Deck créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /decks/{deckId}:
+    get:
+      tags:
+        - Deck
+      summary: Récupérer un deck par ID
+      description: Retourne un deck spécifique
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du deck
+      responses:
+        '200':
+          description: Deck trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '400':
+          description: ID invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Deck non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Deck
+      summary: Modifier un deck
+      description: Met à jour un deck (nécessite une authentification)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du deck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                cards:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Deck mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Deck non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Deck
+      summary: Supprimer un deck
+      description: Supprime un deck (nécessite une authentification)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du deck
+      responses:
+        '200':
+          description: Deck supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Deck supprimé avec succès."
+        '400':
+          description: ID invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Deck non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
